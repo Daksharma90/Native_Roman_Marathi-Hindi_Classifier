@@ -1,54 +1,27 @@
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import torch
-import re
 
-# Load the models and tokenizers from Hugging Face
-native_model_name = "GautamDaksh/Native_Marathi_Hindi_English_classifier"
-romanized_model_name = "GautamDaksh/Hindi-Marathi_Classifier"
+# Load model and tokenizer from Hugging Face
+model_name = "GautamDaksh/Native_Marathi_Hindi_English_classifier"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
-native_tokenizer = AutoTokenizer.from_pretrained(native_model_name)
-native_model = AutoModelForSequenceClassification.from_pretrained(native_model_name)
-
-romanized_tokenizer = AutoTokenizer.from_pretrained(romanized_model_name)
-romanized_model = AutoModelForSequenceClassification.from_pretrained(romanized_model_name)
-
-# Move models to GPU if available
+# Move model to GPU if available
 device = "cuda" if torch.cuda.is_available() else "cpu"
-native_model.to(device)
-romanized_model.to(device)
+model.to(device)
 
-# Reverse label mapping
-native_label_map_inv = {0: "E", 1: "H", 2: "M"}  # English, Hindi, Marathi for native script
-romanized_label_map_inv = {0: "H", 1: "M"}  # Hindi, Marathi for Romanized script
-
-# Function to check if a word is in Devanagari script
-def is_devanagari(word):
-    return bool(re.search(r'[\u0900-\u097F]', word))  # Unicode range for Devanagari
-
-# Function to classify a sentence word-wise using both models
 def classify_sentence(sentence):
     words = sentence.split()
     predictions = []
+    label_map_inv = {0: "E", 1: "H", 2: "M"}  # Reverse mapping for labels
 
     for word in words:
-        if is_devanagari(word):
-            # Classify using Native Model
-            inputs = native_tokenizer(word, return_tensors="pt", truncation=True, padding="max_length", max_length=32).to(device)
-            outputs = native_model(**inputs)
-            predicted_class = torch.argmax(outputs.logits, dim=-1).item()
-            predictions.append((word, native_label_map_inv[predicted_class]))
-        else:
-            # Capitalize first letter for Romanized words
-            formatted_word = word.capitalize()
-            
-            # Classify using Romanized Model
-            inputs = romanized_tokenizer(formatted_word, return_tensors="pt", truncation=True, padding="max_length", max_length=32).to(device)
-            outputs = romanized_model(**inputs)
-            predicted_class = torch.argmax(outputs.logits, dim=-1).item()
-            predictions.append((word, romanized_label_map_inv[predicted_class]))
+        inputs = tokenizer(word, return_tensors="pt", truncation=True, padding="max_length", max_length=32).to(device)
+        outputs = model(**inputs)
+        predicted_class = torch.argmax(outputs.logits, dim=-1).item()
+        predictions.append((word, label_map_inv[predicted_class]))
 
     return predictions
 
-# Example usage
-sentence = "Aaj nahi jau शकत कारण मी आहे"
+sentence = "रात्र असो का दिवस काही फरक पडत नाही"
 print(classify_sentence(sentence))
