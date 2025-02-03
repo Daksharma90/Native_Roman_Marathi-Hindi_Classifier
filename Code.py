@@ -50,5 +50,5 @@ def classify_sentence(sentence):
     return predictions
 
 # Example usage
-sentence = "Aaj office nahi jau शकत कारण मी busy आहे"
+sentence = "Aaj nahi jau शकत कारण मी आहे"
 print(classify_sentence(sentence))
