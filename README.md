@@ -8,5 +8,5 @@ HuggingFace: https://huggingface.co/GautamDaksh/Native_Marathi_Hindi_English_cla
 
 You can also test the model using the code.py file.
 
-Train Accuracy: 92.64%
-Test Accuracy: 90.59%
+
+Train Accuracy: 92.64% | Test Accuracy: 90.59%
